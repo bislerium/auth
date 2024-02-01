@@ -1,0 +1,6 @@
+@auth.jwt.non_refresh_token_HostAddress = http://localhost:5115
+
+GET {{auth.jwt.non_refresh_token_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

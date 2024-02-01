@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E9F92023-16D9-48B7-BF55-E9A24258E40F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F6FCAB92-64B8-4D99-B7C3-D8DCE8175CA5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "auth.jwt.non_refresh_token", "src\auth.jwt.non_refresh_token\auth.jwt.non_refresh_token.csproj", "{BA369009-4B76-4F40-B66F-ACA582B0020B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BA369009-4B76-4F40-B66F-ACA582B0020B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA369009-4B76-4F40-B66F-ACA582B0020B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA369009-4B76-4F40-B66F-ACA582B0020B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA369009-4B76-4F40-B66F-ACA582B0020B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BA369009-4B76-4F40-B66F-ACA582B0020B} = {E9F92023-16D9-48B7-BF55-E9A24258E40F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {51E274BD-BC08-4D4D-9FF8-8D873482F3B6}
+	EndGlobalSection
+EndGlobal
