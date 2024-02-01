@@ -7,7 +7,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E9F92023-16D
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F6FCAB92-64B8-4D99-B7C3-D8DCE8175CA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "auth.jwt.non_refresh_token", "src\auth.jwt.non_refresh_token\auth.jwt.non_refresh_token.csproj", "{BA369009-4B76-4F40-B66F-ACA582B0020B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "auth.jwt.non_refresh_token", "src\auth.jwt.non_refresh_token\auth.jwt.non_refresh_token.csproj", "{BA369009-4B76-4F40-B66F-ACA582B0020B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "auth.jwt.refresh_token", "src\auth.jwt.refresh_token\auth.jwt.refresh_token.csproj", "{0CB6F88A-0DE8-4E44-A6FF-7D0D77254072}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,12 +21,17 @@ Global
 		{BA369009-4B76-4F40-B66F-ACA582B0020B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BA369009-4B76-4F40-B66F-ACA582B0020B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BA369009-4B76-4F40-B66F-ACA582B0020B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CB6F88A-0DE8-4E44-A6FF-7D0D77254072}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CB6F88A-0DE8-4E44-A6FF-7D0D77254072}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CB6F88A-0DE8-4E44-A6FF-7D0D77254072}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CB6F88A-0DE8-4E44-A6FF-7D0D77254072}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{BA369009-4B76-4F40-B66F-ACA582B0020B} = {E9F92023-16D9-48B7-BF55-E9A24258E40F}
+		{0CB6F88A-0DE8-4E44-A6FF-7D0D77254072} = {E9F92023-16D9-48B7-BF55-E9A24258E40F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {51E274BD-BC08-4D4D-9FF8-8D873482F3B6}
