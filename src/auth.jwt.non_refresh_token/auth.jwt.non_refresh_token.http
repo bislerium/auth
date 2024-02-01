@@ -1,6 +1,16 @@
-@auth.jwt.non_refresh_token_HostAddress = http://localhost:5115
+@auth.jwt.non_refresh_token_HostAddress = https://localhost:7165
 
-GET {{auth.jwt.non_refresh_token_HostAddress}}/weatherforecast/
-Accept: application/json
+Post {{auth.jwt.non_refresh_token_HostAddress}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "bishalgc@gmail.com",
+  "password": "asjhsajh"
+}
+
+###
+
+GET {{auth.jwt.non_refresh_token_HostAddress}}/weatherforecast
+Authorization: Bearer 
 
 ###
