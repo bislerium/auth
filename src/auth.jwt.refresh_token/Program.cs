@@ -1,14 +1,32 @@
+using auth.jwt.refresh_token.Configs;
+using auth.jwt.refresh_token.Options.Jwt;
+using auth.jwt.refresh_token.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+# region Services Registration
+
+builder.Services.Configure<JwtOption>(
+    builder.Configuration.GetRequiredSection(JwtOption.SectionName));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddCustomSwaggerGen();
+
+builder.Services
+    .AddAuthentication()
+    .AddCustomJwtBearer(builder.Configuration);
+builder.Services.AddAuthorization();
+
+builder.Services.AddSingleton<JwtService>();
+
+# endregion
 
 var app = builder.Build();
 
+# region Middlewares Registration
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -18,8 +36,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
+
+# endregion
 
 app.Run();

@@ -4,3 +4,12 @@ GET {{auth.jwt.refresh_token_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+POST {{auth.jwt.refresh_token_HostAddress}}/auth/Login
+Content-Type: application/json
+
+{
+  //LoginRequestDTO
+}
+
+###
