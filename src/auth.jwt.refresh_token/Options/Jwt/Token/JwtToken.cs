@@ -3,10 +3,8 @@ using System.Text;
 
 namespace auth.jwt.refresh_token.Options.Jwt.Token
 {
-    public class JwtToken
+    public abstract class JwtToken
     {
-        public required double ExpirationTimeInMinutes { get; set; }
-
         public required string Key { get; set; }
 
         public SymmetricSecurityKey SecurityKey

@@ -24,6 +24,7 @@ namespace auth.jwt.refresh_token.Services
             ];
 
 
+
         public JwtTokenDto GenerateJwtToken(List<Claim> claims)
         {
             Claim[] pre_claims = [
@@ -64,7 +65,7 @@ namespace auth.jwt.refresh_token.Services
                 audience: _jwtOption.Audience,
                 claims: claims,
                 notBefore: DateTime.UtcNow.AddSeconds(_jwtOption.NotBeforeInSeconds),
-                expires: DateTime.UtcNow.AddMinutes(_jwtOption.RefreshToken.ExpirationTimeInMinutes),
+                expires: DateTime.UtcNow.AddDays(_jwtOption.RefreshToken.ExpirationTimeInDays),
                 signingCredentials: _jwtOption.RefreshToken.SigningCredentials
             );
 

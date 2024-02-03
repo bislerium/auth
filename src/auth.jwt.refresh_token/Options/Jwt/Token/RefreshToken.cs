@@ -2,5 +2,7 @@
 {
     public sealed class RefreshToken: JwtToken
     {
+        public required double ExpirationTimeInDays { get; set; }
+
     }
 }

@@ -2,5 +2,7 @@
 {
     public sealed class AccessToken: JwtToken
     {
+        public required double ExpirationTimeInMinutes { get; set; }
+
     }
 }
