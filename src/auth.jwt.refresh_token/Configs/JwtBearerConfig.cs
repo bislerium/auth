@@ -11,8 +11,8 @@ namespace auth.jwt.refresh_token.Configs
             return builder.AddJwtBearer(o =>
             {
                 var jwtOption = configuration
-                    .GetRequiredSection(JwtOption.SectionName)
-                    .Get<JwtOption>()
+                    .GetRequiredSection(JwtOption.SectionName)                    
+                    .Get<JwtOption>()                    
                     ?? throw new InvalidOperationException($"Cannot bind to {nameof(JwtOption)}!");                
 
                 o.TokenValidationParameters = new TokenValidationParameters

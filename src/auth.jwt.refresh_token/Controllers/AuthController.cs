@@ -9,10 +9,10 @@ namespace auth.jwt.refresh_token.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AuthController(ILogger<AuthController> logger, JwtService jwtService) : ControllerBase
+    public class AuthController(ILogger<AuthController> logger, JwtTokenService jwtService) : ControllerBase
     {
 
-        private readonly JwtService _jwtService = jwtService;
+        private readonly JwtTokenService _jwtService = jwtService;
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Login(LoginRequestDTO request)

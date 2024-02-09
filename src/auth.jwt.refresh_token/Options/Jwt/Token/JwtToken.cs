@@ -1,10 +1,12 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace auth.jwt.refresh_token.Options.Jwt.Token
 {
     public abstract class JwtToken
     {
+        [Required]
         public required string Key { get; set; }
 
         public SymmetricSecurityKey SecurityKey

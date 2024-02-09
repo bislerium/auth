@@ -1,4 +1,6 @@
-﻿using auth.jwt.refresh_token.Dtos.Auth;
+﻿using auth.jwt.refresh_token.Abstractions.Repositories;
+using auth.jwt.refresh_token.Abstractions.Services.Jwt;
+using auth.jwt.refresh_token.Dtos.Auth;
 using auth.jwt.refresh_token.Options.Jwt;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -6,9 +8,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
 
-namespace auth.jwt.refresh_token.Services
+namespace auth.jwt.refresh_token.Implementations.Services.Jwt
 {
-    public class JwtService(IOptions<JwtOption> jwtOption)
+    public class JwtTokenRenewerService (IOptions<JwtOption> jwtOption, IJwtTokenGeneratorService jwtTokenGeneratorService, ITokenRepository tokenRepository) : IJwtTokenRenewerService
     {
         private readonly JwtOption _jwtOption = jwtOption.Value;
 
@@ -23,53 +25,10 @@ namespace auth.jwt.refresh_token.Services
             JwtRegisteredClaimNames.Aud
             ];
 
-
-
-        public JwtTokenDto GenerateJwtToken(List<Claim> claims)
+        public async Task<JwtTokenDto> Renew(JwtTokenDto jwtTokenDto)
         {
-            Claim[] pre_claims = [
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Iat, EpochTime.GetIntDate(DateTime.UtcNow).ToString(), ClaimValueTypes.Integer64)
-                ];
-
-            claims.AddRange(pre_claims);
-
-            string accessToken = GenerateAccessToken(claims);
-            string refreshToken = GenerateRefreshToken(pre_claims);
-
-            return new JwtTokenDto()
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken
-            };
-        }
-
-        public string GenerateAccessToken(List<Claim> claims)
-        {
-            var token = new JwtSecurityToken(
-                issuer: _jwtOption.Issuer,
-                audience: _jwtOption.Audience,
-                claims: claims,
-                notBefore: DateTime.UtcNow.AddSeconds(_jwtOption.NotBeforeInSeconds),
-                expires: DateTime.UtcNow.AddMinutes(_jwtOption.AccessToken.ExpirationTimeInMinutes),
-                signingCredentials: _jwtOption.AccessToken.SigningCredentials
-            );
-
-            return _jwtSecurityTokenHandler.WriteToken(token);
-        }
-
-        public string GenerateRefreshToken(IEnumerable<Claim> claims)
-        {
-            var token = new JwtSecurityToken(
-                issuer: _jwtOption.Issuer,
-                audience: _jwtOption.Audience,
-                claims: claims,
-                notBefore: DateTime.UtcNow.AddSeconds(_jwtOption.NotBeforeInSeconds),
-                expires: DateTime.UtcNow.AddDays(_jwtOption.RefreshToken.ExpirationTimeInDays),
-                signingCredentials: _jwtOption.RefreshToken.SigningCredentials
-            );
-
-            return _jwtSecurityTokenHandler.WriteToken(token);
+            var claims = await ValidateToken(jwtTokenDto);
+            return await jwtTokenGeneratorService.GenerateJwtToken(claims);
         }
 
         public async Task<IEnumerable<Claim>> ValidateToken(JwtTokenDto jwtToken)
@@ -114,6 +73,9 @@ namespace auth.jwt.refresh_token.Services
                     throw new SecurityTokenException("Tokens mismatched!");
                 }
 
+                var userId = a.Result.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+                await tokenRepository.IsReused(refreshPrincipalJti, userId);
 
                 return a.Result.Claims.Where(Claim => !_generatedClaims.Contains(Claim.Type)).ToList();
 
@@ -122,7 +84,7 @@ namespace auth.jwt.refresh_token.Services
             {
                 var messages = ex.Flatten().InnerExceptions.Select(iex => iex.Message).ToList();
                 throw new SecurityTokenException(JsonSerializer.Serialize(messages));
-            }            
+            }
         }
 
         private Task<ClaimsPrincipal> ValidateToken(TokenValidationParameters tokenValidationParameters, string token)

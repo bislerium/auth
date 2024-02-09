@@ -1,4 +1,6 @@
 using auth.jwt.refresh_token.Configs;
+using auth.jwt.refresh_token.Implementations.Repositories;
+using auth.jwt.refresh_token.Implementations.Services.Jwt;
 using auth.jwt.refresh_token.Options.Jwt;
 using auth.jwt.refresh_token.Services;
 
@@ -6,8 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 # region Services Registration
 
-builder.Services.Configure<JwtOption>(
-    builder.Configuration.GetRequiredSection(JwtOption.SectionName));
+builder.Services.AddOptions<JwtOption>()
+    .BindConfiguration(JwtOption.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -20,7 +24,8 @@ builder.Services
     .AddCustomJwtBearer(builder.Configuration);
 builder.Services.AddAuthorization();
 
-builder.Services.AddSingleton<JwtService>();
+builder.Services.AddJwtTokenService();
+builder.Services.AddTokenRepository();
 
 # endregion
 
