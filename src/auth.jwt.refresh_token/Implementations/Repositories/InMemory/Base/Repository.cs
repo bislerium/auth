@@ -1,9 +1,9 @@
 ﻿using auth.jwt.refresh_token.Abstractions.Repositories.Base;
 using auth.jwt.refresh_token.Entities.Base;
 
-namespace auth.jwt.refresh_token.Implementations.Repositories.Base
+namespace auth.jwt.refresh_token.Implementations.Repositories.InMemory.Base
 {
-    public class InMemoryRepository<TSource> : IRepository<TSource> where TSource : IModel
+    public class Repository<TSource> : IRepository<TSource> where TSource : IModel
     {
         protected readonly List<TSource> _sources = [];
 

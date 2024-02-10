@@ -1,16 +1,16 @@
 ﻿using auth.jwt.refresh_token.Abstractions.Repositories;
 using auth.jwt.refresh_token.Abstractions.Services.Jwt;
 using auth.jwt.refresh_token.Dtos.Auth;
+using auth.jwt.refresh_token.Factories.Jwt;
 using auth.jwt.refresh_token.Options.Jwt;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text.Json;
 
 namespace auth.jwt.refresh_token.Implementations.Services.Jwt
 {
-    public class JwtTokenRenewerService (IOptions<JwtOption> jwtOption, IJwtTokenGeneratorService jwtTokenGeneratorService, ITokenRepository tokenRepository) : IJwtTokenRenewerService
+    public class JwtTokenRenewerService(IOptions<JwtOption> jwtOption, IJwtTokenGeneratorService jwtTokenGeneratorService, ITokenRepository tokenRepository) : IJwtTokenRenewerService
     {
         private readonly JwtOption _jwtOption = jwtOption.Value;
 
@@ -28,68 +28,69 @@ namespace auth.jwt.refresh_token.Implementations.Services.Jwt
         public async Task<JwtTokenDto> Renew(JwtTokenDto jwtTokenDto)
         {
             var claims = await ValidateToken(jwtTokenDto);
-            return await jwtTokenGeneratorService.GenerateJwtToken(claims);
+            return jwtTokenGeneratorService.GenerateJwtToken(claims);
         }
 
         public async Task<IEnumerable<Claim>> ValidateToken(JwtTokenDto jwtToken)
         {
-            var accessTokenValidationParameters = new TokenValidationParameters
+
+            var accessTokenValidationParameters = TokenValidationParametersFactory.Create
+                (
+                validIssuer: _jwtOption.Issuer,
+                validAudience: _jwtOption.Audience,
+                issuerSigningKey: _jwtOption.AccessToken.SecurityKey,
+                clockSkew: TimeSpan.FromSeconds(_jwtOption.ClockSkewInSeconds),
+                validateLifetime: false
+                );
+
+            var refreshTokenValidationParameters = TokenValidationParametersFactory.Create
+                (
+                validIssuer: _jwtOption.Issuer,
+                validAudience: _jwtOption.Audience,
+                issuerSigningKey: _jwtOption.RefreshToken.SecurityKey,
+                clockSkew: TimeSpan.FromSeconds(_jwtOption.ClockSkewInSeconds)
+                );
+
+            var accessTokenClaimsPricipal = ValidateToken(accessTokenValidationParameters, jwtToken.AccessToken);
+            var refreshTokenClaimsPricipal = ValidateToken(refreshTokenValidationParameters, jwtToken.RefreshToken);
+
+            string? refreshPrincipalJti = CheckAndGetJti(accessTokenClaimsPricipal, refreshTokenClaimsPricipal);
+            var userId = accessTokenClaimsPricipal.FindFirstValue(JwtRegisteredClaimNames.Sub)!;
+            var isRefreshTokenLatest = await tokenRepository.IsRefreshTokenLatest(refreshPrincipalJti, userId);
+
+            if (!isRefreshTokenLatest)
             {
-                ValidIssuer = _jwtOption.Issuer,
-                ValidAudience = _jwtOption.Audience,
-                IssuerSigningKey = _jwtOption.AccessToken.SecurityKey,
-                ClockSkew = TimeSpan.FromSeconds(_jwtOption.ClockSkewInSeconds),
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = false,
-                ValidateIssuerSigningKey = true
-            };
-
-            var refreshTokenValidationParameters = new TokenValidationParameters
-            {
-                ValidIssuer = _jwtOption.Issuer,
-                ValidAudience = _jwtOption.Audience,
-                IssuerSigningKey = _jwtOption.RefreshToken.SecurityKey,
-                ClockSkew = TimeSpan.FromSeconds(_jwtOption.ClockSkewInSeconds),
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true
-            };
-
-            try
-            {
-                var a = ValidateToken(accessTokenValidationParameters, jwtToken.AccessToken);
-                var b = ValidateToken(refreshTokenValidationParameters, jwtToken.RefreshToken);
-                await Task.WhenAll(a, b);
-
-                string? accessPrincipalJti = a.Result.FindFirstValue(JwtRegisteredClaimNames.Jti);
-                string? refreshPrincipalJti = b.Result.FindFirstValue(JwtRegisteredClaimNames.Jti);
-
-                if (string.IsNullOrWhiteSpace(accessPrincipalJti)
-                    || string.IsNullOrWhiteSpace(refreshPrincipalJti)
-                    || !refreshPrincipalJti.Equals(accessPrincipalJti, StringComparison.Ordinal))
-                {
-                    throw new SecurityTokenException("Tokens mismatched!");
-                }
-
-                var userId = a.Result.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
-                await tokenRepository.IsReused(refreshPrincipalJti, userId);
-
-                return a.Result.Claims.Where(Claim => !_generatedClaims.Contains(Claim.Type)).ToList();
-
+                throw new SecurityTokenException("Invalid Refresh Token!");
             }
-            catch (AggregateException ex)
-            {
-                var messages = ex.Flatten().InnerExceptions.Select(iex => iex.Message).ToList();
-                throw new SecurityTokenException(JsonSerializer.Serialize(messages));
-            }
+
+            return accessTokenClaimsPricipal
+                .Claims
+                .ExceptBy(_generatedClaims, x => x.Type)
+                .ToList();
         }
 
-        private Task<ClaimsPrincipal> ValidateToken(TokenValidationParameters tokenValidationParameters, string token)
+        private static string CheckAndGetJti(ClaimsPrincipal accessTokenClaimsPrincipal, ClaimsPrincipal refreshTokenClaimsPrincipal)
         {
-            return Task.Run(() => _jwtSecurityTokenHandler.ValidateToken(token, tokenValidationParameters, out _));
+            string? accessTokenJti = GetJtiFromPrincipal(accessTokenClaimsPrincipal);
+            string? refreshTokenJti = GetJtiFromPrincipal(refreshTokenClaimsPrincipal);
+
+            if (string.IsNullOrWhiteSpace(accessTokenJti) || string.IsNullOrWhiteSpace(refreshTokenJti) || !string.Equals(accessTokenJti, refreshTokenJti, StringComparison.Ordinal))
+            {
+                throw new SecurityTokenException("Tokens mismatched!");
+            }
+
+            return refreshTokenJti;
+        }
+
+        private static string? GetJtiFromPrincipal(ClaimsPrincipal claimsPrincipal)
+        {
+            return claimsPrincipal.FindFirstValue(JwtRegisteredClaimNames.Jti);
+        }
+
+
+        private ClaimsPrincipal ValidateToken(TokenValidationParameters tokenValidationParameters, string token)
+        {
+            return _jwtSecurityTokenHandler.ValidateToken(token, tokenValidationParameters, out _);
         }
     }
 }

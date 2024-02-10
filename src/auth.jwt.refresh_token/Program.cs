@@ -1,8 +1,7 @@
 using auth.jwt.refresh_token.Configs;
-using auth.jwt.refresh_token.Implementations.Repositories;
+using auth.jwt.refresh_token.Implementations.Repositories.InMemory;
 using auth.jwt.refresh_token.Implementations.Services.Jwt;
 using auth.jwt.refresh_token.Options.Jwt;
-using auth.jwt.refresh_token.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,8 +23,9 @@ builder.Services
     .AddCustomJwtBearer(builder.Configuration);
 builder.Services.AddAuthorization();
 
-builder.Services.AddJwtTokenService();
-builder.Services.AddTokenRepository();
+builder.Services.AddInMemoryTokenRepository();
+builder.Services.AddJwtTokenGeneratorService();
+builder.Services.AddJwtTokenRenewerService();
 
 # endregion
 

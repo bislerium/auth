@@ -2,27 +2,19 @@
 
 namespace auth.jwt.refresh_token.Factories.Jwt
 {
-    public class TokenValidationParametersFactory : IFactory<TokenValidationParameters>
+    public static class TokenValidationParametersFactory
     {
-        public static TokenValidationParameters Create(string validIssuer,string validAudience, SecurityKey issuerSigningKey, TimeSpan clockSkew, bool ValidateIssuer = true, bool ValidateAudience = true, bool ValidateLifetime = true, bool ValidateIssuerSigningKey = true)
-        {
-            return  new TokenValidationParameters
-            {    
-                
-                ValidIssuer =validIssuer,
+        public static TokenValidationParameters Create(string validIssuer, string validAudience, SecurityKey issuerSigningKey, TimeSpan clockSkew, bool validateIssuer = true, bool validateAudience = true, bool validateLifetime = true, bool validateIssuerSigningKey = true)
+            => new()
+            {
+                ValidIssuer = validIssuer,
                 ValidAudience = validAudience,
                 IssuerSigningKey = issuerSigningKey,
                 ClockSkew = clockSkew,
-                ValidateIssuer = ValidateIssuer,
-                ValidateAudience = ValidateAudience,
-                ValidateLifetime = ValidateLifetime,
-                ValidateIssuerSigningKey = ValidateIssuerSigningKey,                
+                ValidateIssuer = validateIssuer,
+                ValidateAudience = validateAudience,
+                ValidateLifetime = validateLifetime,
+                ValidateIssuerSigningKey = validateIssuerSigningKey,
             };
-        }
-
-        public static TokenValidationParameters Create(params object[] parameters)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using auth.jwt.refresh_token.Entities.Base;
-using System;
 
 namespace auth.jwt.refresh_token.Abstractions.Repositories.Base
 {

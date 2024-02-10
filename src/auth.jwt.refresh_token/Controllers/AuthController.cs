@@ -1,6 +1,5 @@
-﻿using auth.jwt.refresh_token.Dtos.Auth;
-using auth.jwt.refresh_token.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using auth.jwt.refresh_token.Abstractions.Services.Jwt;
+using auth.jwt.refresh_token.Dtos.Auth;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -9,13 +8,11 @@ namespace auth.jwt.refresh_token.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AuthController(ILogger<AuthController> logger, JwtTokenService jwtService) : ControllerBase
+    public class AuthController(ILogger<AuthController> logger, IJwtTokenGeneratorService jwtTokenGeneratorService) : ControllerBase
     {
 
-        private readonly JwtTokenService _jwtService = jwtService;
-
         [HttpPost("[action]")]
-        public async Task<IActionResult> Login(LoginRequestDTO request)
+        public IActionResult Login(LoginRequestDTO request)
         {
             // Validate the credential against the user record queried from the database
 
@@ -39,9 +36,9 @@ namespace auth.jwt.refresh_token.Controllers
                     new (JwtRegisteredClaimNames.Email, request.Email)
                 };
 
-            var jwtToken = _jwtService.GenerateJwtToken(claims);
+            var jwtToken = jwtTokenGeneratorService.GenerateJwtToken(claims);
 
-            return Ok(jwtToken);            
+            return Ok(jwtToken);
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿using auth.jwt.refresh_token.Options.Jwt;
+﻿using auth.jwt.refresh_token.Factories.Jwt;
+using auth.jwt.refresh_token.Options.Jwt;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.IdentityModel.Tokens;
 
 namespace auth.jwt.refresh_token.Configs
 {
@@ -11,21 +11,17 @@ namespace auth.jwt.refresh_token.Configs
             return builder.AddJwtBearer(o =>
             {
                 var jwtOption = configuration
-                    .GetRequiredSection(JwtOption.SectionName)                    
-                    .Get<JwtOption>()                    
-                    ?? throw new InvalidOperationException($"Cannot bind to {nameof(JwtOption)}!");                
+                    .GetRequiredSection(JwtOption.SectionName)
+                    .Get<JwtOption>()
+                    ?? throw new InvalidOperationException($"Cannot bind to {nameof(JwtOption)}!");
 
-                o.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidIssuer = jwtOption.Issuer,
-                    ValidAudience = jwtOption.Audience,
-                    IssuerSigningKey = jwtOption.AccessToken.SecurityKey,
-                    ClockSkew = TimeSpan.FromSeconds(jwtOption.ClockSkewInSeconds),
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true
-                };
+                o.TokenValidationParameters = TokenValidationParametersFactory.Create
+                    (
+                    validIssuer: jwtOption.Issuer,
+                    validAudience: jwtOption.Audience,
+                    issuerSigningKey: jwtOption.AccessToken.SecurityKey,
+                    clockSkew: TimeSpan.FromSeconds(jwtOption.ClockSkewInSeconds)
+                    );
             });
         }
     }

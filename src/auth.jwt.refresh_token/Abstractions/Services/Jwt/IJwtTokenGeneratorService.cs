@@ -5,6 +5,6 @@ namespace auth.jwt.refresh_token.Abstractions.Services.Jwt
 {
     public interface IJwtTokenGeneratorService
     {
-        Task<JwtTokenDto> GenerateJwtToken(IEnumerable<Claim> claims);
+        JwtTokenDto GenerateJwtToken(IEnumerable<Claim> claims);
     }
 }

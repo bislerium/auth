@@ -2,7 +2,7 @@
 
 namespace auth.jwt.refresh_token.Entities
 {
-    public class JwtToken: IModel
+    public class JwtToken : IModel
     {
         public required string Id { get; set; }
         public required string UserId { get; set; }
