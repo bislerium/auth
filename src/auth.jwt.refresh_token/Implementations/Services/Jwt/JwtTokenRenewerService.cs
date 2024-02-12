@@ -10,11 +10,21 @@ using System.Security.Claims;
 
 namespace auth.jwt.refresh_token.Implementations.Services.Jwt
 {
-    public class JwtTokenRenewerService(IOptions<JwtOption> jwtOption, IJwtTokenGeneratorService jwtTokenGeneratorService, ITokenRepository tokenRepository) : IJwtTokenRenewerService
+    public class JwtTokenRenewerService : IJwtTokenRenewerService
     {
-        private readonly JwtOption _jwtOption = jwtOption.Value;
+        private readonly JwtOption _jwtOption;
+        private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
+        private readonly IJwtTokenGeneratorService _jwtTokenGeneratorService;
+        private readonly ITokenRepository _tokenRepository;
 
-        private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler = new();
+        public JwtTokenRenewerService(IOptions<JwtOption> jwtOption, IJwtTokenGeneratorService jwtTokenGeneratorService, ITokenRepository tokenRepository)
+        {
+            _jwtOption = jwtOption.Value;
+            _jwtSecurityTokenHandler = new();
+            _jwtSecurityTokenHandler.InboundClaimTypeMap.Clear();
+            _jwtTokenGeneratorService = jwtTokenGeneratorService;
+            _tokenRepository = tokenRepository;
+        }
 
         private readonly string[] _generatedClaims = [
             JwtRegisteredClaimNames.Jti,
@@ -28,7 +38,7 @@ namespace auth.jwt.refresh_token.Implementations.Services.Jwt
         public async Task<JwtTokenDto> Renew(JwtTokenDto jwtTokenDto)
         {
             var claims = await ValidateToken(jwtTokenDto);
-            return jwtTokenGeneratorService.GenerateJwtToken(claims);
+            return await _jwtTokenGeneratorService.GenerateJwtToken(claims);
         }
 
         public async Task<IEnumerable<Claim>> ValidateToken(JwtTokenDto jwtToken)
@@ -56,7 +66,7 @@ namespace auth.jwt.refresh_token.Implementations.Services.Jwt
 
             string? refreshPrincipalJti = CheckAndGetJti(accessTokenClaimsPricipal, refreshTokenClaimsPricipal);
             var userId = accessTokenClaimsPricipal.FindFirstValue(JwtRegisteredClaimNames.Sub)!;
-            var isRefreshTokenLatest = await tokenRepository.IsRefreshTokenLatest(refreshPrincipalJti, userId);
+            var isRefreshTokenLatest = await _tokenRepository.IsRefreshTokenLatest(refreshPrincipalJti, userId);
 
             if (!isRefreshTokenLatest)
             {
@@ -89,7 +99,7 @@ namespace auth.jwt.refresh_token.Implementations.Services.Jwt
 
 
         private ClaimsPrincipal ValidateToken(TokenValidationParameters tokenValidationParameters, string token)
-        {
+        {            
             return _jwtSecurityTokenHandler.ValidateToken(token, tokenValidationParameters, out _);
         }
     }

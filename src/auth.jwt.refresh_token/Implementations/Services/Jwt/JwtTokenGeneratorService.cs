@@ -1,5 +1,7 @@
-﻿using auth.jwt.refresh_token.Abstractions.Services.Jwt;
+﻿using auth.jwt.refresh_token.Abstractions.Repositories;
+using auth.jwt.refresh_token.Abstractions.Services.Jwt;
 using auth.jwt.refresh_token.Dtos.Auth;
+using auth.jwt.refresh_token.Entities;
 using auth.jwt.refresh_token.Factories.Jwt;
 using auth.jwt.refresh_token.Options.Jwt;
 using Microsoft.Extensions.Options;
@@ -9,23 +11,36 @@ using System.Security.Claims;
 
 namespace auth.jwt.refresh_token.Implementations.Services.Jwt
 {
-    public class JwtTokenGeneratorService(IOptions<JwtOption> jwtOption) : IJwtTokenGeneratorService
+    public class JwtTokenGeneratorService (IOptions<JwtOption> jwtOption, ITokenRepository tokenRepository): IJwtTokenGeneratorService
     {
         private readonly JwtOption _jwtOption = jwtOption.Value;
 
         private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler = new();
 
-        public JwtTokenDto GenerateJwtToken(IEnumerable<Claim> claims)
+        public async Task<JwtTokenDto> GenerateJwtToken(IEnumerable<Claim> claims)
         {
-            Claim[] pre_claims = [
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Iat, EpochTime.GetIntDate(DateTime.UtcNow).ToString(), ClaimValueTypes.Integer64)
-                ];
 
-            var aggregated_claims = pre_claims.UnionBy(claims, x => x.Type).ToArray();
+            var jwtTokenIdClaim = new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString());
+
+            var currentEpochTime = EpochTime.GetIntDate(DateTime.UtcNow);
+            var issuedAtEpochTimeClaim = new Claim(JwtRegisteredClaimNames.Iat, currentEpochTime.ToString(), ClaimValueTypes.Integer64);
+
+            Claim[] pre_claims = [
+                jwtTokenIdClaim,
+                issuedAtEpochTimeClaim
+                ];
+            
+            var aggregated_claims = pre_claims.UnionBy(claims, c => c.Type).ToArray();
 
             var accessToken = GenerateAccessToken(aggregated_claims);
             var refreshToken = GenerateRefreshToken(pre_claims);
+
+            await tokenRepository.Add(new JwtToken()
+            {
+                Id = jwtTokenIdClaim.Value,
+                IssuedAtEpochTime = currentEpochTime,
+                UserId = claims.Where(c => c.Type.Equals(JwtRegisteredClaimNames.Sub)).First().Value
+            });
 
             return new JwtTokenDto()
             {
@@ -62,7 +77,7 @@ namespace auth.jwt.refresh_token.Implementations.Services.Jwt
         {
             var token = JwtSecurityTokenFactory.Create(
                 issuer: issuer,
-                audience: audience,
+                audience: audience,  
                 claims: claims,
                 notBefore: notBefore,
                 expires: expires,

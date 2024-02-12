@@ -1,6 +1,7 @@
 ﻿using auth.jwt.refresh_token.Factories.Jwt;
 using auth.jwt.refresh_token.Options.Jwt;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace auth.jwt.refresh_token.Configs
 {
@@ -11,17 +12,19 @@ namespace auth.jwt.refresh_token.Configs
             return builder.AddJwtBearer(o =>
             {
                 var jwtOption = configuration
-                    .GetRequiredSection(JwtOption.SectionName)
-                    .Get<JwtOption>()
+                    .GetRequiredSection(JwtOption.SectionName)                    
+                    .Get<JwtOption>()                    
                     ?? throw new InvalidOperationException($"Cannot bind to {nameof(JwtOption)}!");
+                
+                o.MapInboundClaims = false;
 
                 o.TokenValidationParameters = TokenValidationParametersFactory.Create
                     (
-                    validIssuer: jwtOption.Issuer,
-                    validAudience: jwtOption.Audience,
-                    issuerSigningKey: jwtOption.AccessToken.SecurityKey,
-                    clockSkew: TimeSpan.FromSeconds(jwtOption.ClockSkewInSeconds)
-                    );
+                    validIssuer : jwtOption.Issuer,
+                    validAudience : jwtOption.Audience,
+                    issuerSigningKey : jwtOption.AccessToken.SecurityKey,
+                    clockSkew : TimeSpan.FromSeconds(jwtOption.ClockSkewInSeconds)
+                );
             });
         }
     }

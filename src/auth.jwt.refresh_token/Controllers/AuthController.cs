@@ -8,17 +8,16 @@ namespace auth.jwt.refresh_token.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AuthController(ILogger<AuthController> logger, IJwtTokenGeneratorService jwtTokenGeneratorService) : ControllerBase
+    public class AuthController(ILogger<AuthController> logger, IJwtTokenGeneratorService jwtTokenGeneratorService, IJwtTokenRenewerService jwtTokenRenewerService) : ControllerBase
     {
 
         [HttpPost("[action]")]
-        public IActionResult Login(LoginRequestDTO request)
+        public async Task<IActionResult> Login(LoginRequestDTO request)
         {
             // Validate the credential against the user record queried from the database
 
             // Mimicking Login Success
             bool IsLoginSuccess = Convert.ToBoolean(Random.Shared.Next(0, 2));
-
 
             // Early return pattern
             if (IsLoginSuccess)
@@ -27,7 +26,6 @@ namespace auth.jwt.refresh_token.Controllers
                 return Unauthorized("Account with given UserName or password not found!");
             }
 
-
             // JWT payload storing user information as key-value pair using CLaim
             var claims = new List<Claim>
                 {
@@ -35,9 +33,16 @@ namespace auth.jwt.refresh_token.Controllers
                     new (JwtRegisteredClaimNames.GivenName, request.Email.Split("@")[0]),
                     new (JwtRegisteredClaimNames.Email, request.Email)
                 };
+            
+            var jwtToken = await jwtTokenGeneratorService.GenerateJwtToken(claims);
+            return Ok(jwtToken);
+        }
 
-            var jwtToken = jwtTokenGeneratorService.GenerateJwtToken(claims);
-
+        [HttpPost("[action]")]
+        public async Task<IActionResult> Refresh(JwtTokenDto jwtTokens)
+        {
+            
+            var jwtToken = await jwtTokenRenewerService.Renew(jwtTokens);
             return Ok(jwtToken);
         }
     }

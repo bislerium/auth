@@ -12,7 +12,7 @@ namespace auth.jwt.refresh_token.Implementations.Repositories.InMemory
             {
                 return _sources
                 .Where(refTok => refTok.UserId.Equals(userId))
-                .OrderByDescending(refTok => refTok.CreatedAtEpochTime)
+                .OrderByDescending(refTok => refTok.IssuedAtEpochTime)
                 .FirstOrDefault()
                 ?.Id
                 .Equals(tokenId)
