@@ -16,8 +16,6 @@ namespace auth.jwt.refresh_token.Configs
                     .Get<JwtOption>()                    
                     ?? throw new InvalidOperationException($"Cannot bind to {nameof(JwtOption)}!");
                 
-                o.MapInboundClaims = false;
-
                 o.TokenValidationParameters = TokenValidationParametersFactory.Create
                     (
                     validIssuer : jwtOption.Issuer,
@@ -25,6 +23,9 @@ namespace auth.jwt.refresh_token.Configs
                     issuerSigningKey : jwtOption.AccessToken.SecurityKey,
                     clockSkew : TimeSpan.FromSeconds(jwtOption.ClockSkewInSeconds)
                 );
+                
+                //o.TokenHandlers.Clear();
+                //o.TokenHandlers.Add(new CustomJwtSecurityTokenHandler());
             });
         }
     }

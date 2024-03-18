@@ -6,7 +6,7 @@ namespace auth.jwt.refresh_token.Implementations.Repositories.InMemory
 {
     public class TokenRepository : Repository<JwtToken>, ITokenRepository
     {
-        public Task<bool> IsRefreshTokenLatest(string tokenId, string userId)
+        public Task<bool> IsTokenLatest(string tokenId, string userId)
         {
             return Task.Run(() =>
             {

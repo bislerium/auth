@@ -43,7 +43,21 @@ namespace auth.jwt.refresh_token.Implementations.Services.Jwt
 
         public async Task<IEnumerable<Claim>> ValidateToken(JwtTokenDto jwtToken)
         {
+            var (accessTokenValidationParameters, refreshTokenValidationParameters) = GetTokensValidationParameters(jwtToken);
+            var (accessTokenClaimsPricipal, refreshTokenClaimsPricipal) = GetTokensClaimPricipal(accessTokenValidationParameters, refreshTokenValidationParameters, jwtToken);
+            var (tokenId, userId) = GetRequiredClaimValuesFromToken(accessTokenClaimsPricipal, refreshTokenClaimsPricipal);
+            
+            var isRefreshTokenLatest = await _tokenRepository.IsTokenLatest(tokenId, userId);
+            if (!isRefreshTokenLatest)
+            {
+                throw new SecurityTokenException("Invalid Refresh Token!");
+            }
 
+            return GetFilteredClaims(accessTokenClaimsPricipal);
+        }
+
+        private (TokenValidationParameters AccessTokenValidationParameters, TokenValidationParameters RefreshTokenValidationParameters) GetTokensValidationParameters(JwtTokenDto jwtTokenDto)
+        {
             var accessTokenValidationParameters = TokenValidationParametersFactory.Create
                 (
                 validIssuer: _jwtOption.Issuer,
@@ -61,18 +75,25 @@ namespace auth.jwt.refresh_token.Implementations.Services.Jwt
                 clockSkew: TimeSpan.FromSeconds(_jwtOption.ClockSkewInSeconds)
                 );
 
-            var accessTokenClaimsPricipal = ValidateToken(accessTokenValidationParameters, jwtToken.AccessToken);
-            var refreshTokenClaimsPricipal = ValidateToken(refreshTokenValidationParameters, jwtToken.RefreshToken);
+            return (accessTokenValidationParameters, refreshTokenValidationParameters);
+        }
 
-            string? refreshPrincipalJti = CheckAndGetJti(accessTokenClaimsPricipal, refreshTokenClaimsPricipal);
+        private (ClaimsPrincipal AccessTokenClaimsPrincipal, ClaimsPrincipal RefreshTokenClaimsPrincipal) GetTokensClaimPricipal(TokenValidationParameters accessTokenValidationParameters, TokenValidationParameters refreshTokenValidationParameters, JwtTokenDto jwtTokenDto)
+        {
+            var accessTokenClaimsPricipal = ValidateTokenByTokenValidationParameters(accessTokenValidationParameters, jwtTokenDto.AccessToken);
+            var refreshTokenClaimsPricipal = ValidateTokenByTokenValidationParameters(refreshTokenValidationParameters, jwtTokenDto.RefreshToken);
+            return (accessTokenClaimsPricipal, refreshTokenClaimsPricipal);
+        }
+
+        private (string TokenId, string UserId) GetRequiredClaimValuesFromToken(ClaimsPrincipal accessTokenClaimsPricipal, ClaimsPrincipal refreshTokenClaimsPricipal)
+        {
+            var tokenId = CheckAndGetJti(accessTokenClaimsPricipal, refreshTokenClaimsPricipal);
             var userId = accessTokenClaimsPricipal.FindFirstValue(JwtRegisteredClaimNames.Sub)!;
-            var isRefreshTokenLatest = await _tokenRepository.IsRefreshTokenLatest(refreshPrincipalJti, userId);
+            return (tokenId, userId);
+        }
 
-            if (!isRefreshTokenLatest)
-            {
-                throw new SecurityTokenException("Invalid Refresh Token!");
-            }
-
+        private IEnumerable<Claim> GetFilteredClaims(ClaimsPrincipal accessTokenClaimsPricipal)
+        {
             return accessTokenClaimsPricipal
                 .Claims
                 .ExceptBy(_generatedClaims, x => x.Type)
@@ -98,7 +119,7 @@ namespace auth.jwt.refresh_token.Implementations.Services.Jwt
         }
 
 
-        private ClaimsPrincipal ValidateToken(TokenValidationParameters tokenValidationParameters, string token)
+        private ClaimsPrincipal ValidateTokenByTokenValidationParameters(TokenValidationParameters tokenValidationParameters, string token)
         {            
             return _jwtSecurityTokenHandler.ValidateToken(token, tokenValidationParameters, out _);
         }

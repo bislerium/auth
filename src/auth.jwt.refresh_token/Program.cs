@@ -2,6 +2,7 @@ using auth.jwt.refresh_token.Configs;
 using auth.jwt.refresh_token.Implementations.Repositories.InMemory;
 using auth.jwt.refresh_token.Implementations.Services.Jwt;
 using auth.jwt.refresh_token.Options.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCustomSwaggerGen();
+
+builder.Services.AddSingleton<JwtSecurityTokenHandler, CustomJwtSecurityTokenHandler>();
 
 builder.Services
     .AddAuthentication()

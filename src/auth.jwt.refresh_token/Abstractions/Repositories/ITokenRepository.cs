@@ -5,6 +5,6 @@ namespace auth.jwt.refresh_token.Abstractions.Repositories
 {
     public interface ITokenRepository: IRepository<JwtToken>
     {
-        Task<bool> IsRefreshTokenLatest(string refreshTokenId, string userId);
+        Task<bool> IsTokenLatest(string refreshTokenId, string userId);
     }
 }
